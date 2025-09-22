@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ScarLego</title>
+    <meta name="description" content="ScarLego – LEGO sets pulled from a Google Sheet" />
+    <style>
+        :root {
+            --bg: #0b0c10;
+            --panel: #111318;
+            --ink: #e9eef4;
+            --muted: #aab3bf;
+            --brand: #fdd835;
+            --accent: #e53935;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+            --radius: 18px;
+            --maxw: 1100px;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            background: linear-gradient(180deg, #0b0c10 0%, #0e1016 100%);
+            color: var(--ink);
+            font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif
+        }
+
+        a {
+            color: inherit
+        }
+
+        .wrap {
+            max-width: var(--maxw);
+            margin: 0 auto;
+            padding: 20px
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 18px 0
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none
+        }
+
+        .logo span {
+            font-weight: 900;
+            font-size: 32px;
+            letter-spacing: .5px
+        }
+
+        .panel {
+            background: var(--panel);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px
+        }
+
+        .pill {
+            background: #1a1f2b;
+            border: 1px solid #212836;
+            border-radius: 999px;
+            padding: 10px 14px;
+            color: var(--muted)
+        }
+
+        input[type="search"],
+        select {
+            all: unset;
+            background: #121722;
+            border: 1px solid #1e2633;
+            border-radius: 12px;
+            padding: 10px 12px;
+            min-width: 200px;
+            color: var(--ink)
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 12px
+        }
+
+        thead th {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600;
+            text-align: left;
+            padding: 0 12px
+        }
+
+        tbody tr {
+            background: #0f1420;
+            border: 1px solid #1b2331
+        }
+
+        tbody td {
+            padding: 12px
+        }
+
+        tbody tr td:first-child {
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px
+        }
+
+        tbody tr td:last-child {
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px
+        }
+
+        .thumb {
+            width: 84px;
+            height: 84px;
+            border-radius: 10px;
+            background: #0b0f18;
+            border: 1px solid #1b2331;
+            object-fit: contain
+        }
+
+        .name {
+            font-weight: 700
+        }
+
+        .price {
+            font-variant-numeric: tabular-nums
+        }
+
+        .linkish {
+            color: #a6c8ff;
+            text-decoration: none
+        }
+
+        .detail {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 24px
+        }
+
+        .card {
+            background: var(--panel);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px
+        }
+
+        .hero {
+            width: 100%;
+            max-height: 420px;
+            object-fit: contain;
+            border-radius: 14px;
+            background: #0b0f18;
+            border: 1px solid #1b2331
+        }
+
+        .meta {
+            display: grid;
+            gap: 10px
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            font-weight: 800;
+            padding: 12px 16px;
+            border-radius: 12px;
+            text-decoration: none
+        }
+
+        .btn.secondary {
+            background: #1f2634;
+            color: #d8e2ee;
+            border: 1px solid #2a3446
+        }
+
+        .crumbs {
+            color: var(--muted);
+            margin-bottom: 10px
+        }
+
+        @media (max-width: 820px) {
+            .detail {
+                grid-template-columns: 1fr
+            }
+
+            .thumb {
+                width: 64px;
+                height: 64px
+            }
+
+            .logo span {
+                font-size: 26px
+            }
+        }
+
+        .logo-img {
+            height: 112px;
+            width: auto;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        @media (max-width: 820px) {
+            .logo-img {
+                height: 72px;
+            }
+        }
+
+        footer {
+            color: var(--muted);
+            text-align: center;
+            margin: 36px 0
+        }
+
+        /* under-offer badge and wrappers */
+        .imgwrap,
+        .mediawrap {
+            position: relative;
+            display: inline-block;
+        }
+
+        .offer-badge-list {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            z-index: 2;
+            background: rgba(229, 57, 53, 0.75);
+            color: #fff;
+            font-weight: 800;
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, .25);
+            letter-spacing: .2px;
+            top: 25%;
+            /* vertical offset from top of image */
+            left: 50%;
+            /* middle of image */
+            transform: translateX(-50%);
+            /* shift back by 50% of own width */
+        }
+
+        .offer-badge-detail {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            z-index: 2;
+            background: rgba(229, 57, 53, 0.75);
+            color: #fff;
+            font-weight: 800;
+            font-size: 40px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, .25);
+            letter-spacing: .2px;
+            text-align: center;
+        }
+
+        /* subtle row accent for 'under offer' */
+        /* tbody tr.uo td:first-child {
+            box-shadow: inset 4px 0 0 0 var(--accent);
+        } */
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header>
+            <a href="#/" class="logo" aria-label="ScarLego home">
+                <img id="siteLogo" class="logo-img" alt="ScarLego logo" src="" />
+                <span id="logoText" class="logo-text" aria-hidden="true">ScarLego</span>
+            </a>
+
+        </header>
+
+        <main id="app" class="panel" aria-live="polite"></main>
+
+        <footer>
+            <small>Built by James for Scarlet</small>
+        </footer>
+    </div>
+
+    <script>
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRZ1lJVhm6bW59v_L8dP7jyNPYxnMPB_tImN_M8B3JujIqJdY3Ox9pQj0rm3JdJCZkQ_8adiy72Q75d/pub?gid=613613055&single=true&output=csv";
+        const CONTACT_EMAIL = "scarlet@thehewitts.me.uk";
+        const LOGO_URL = "./ScarLego%20logo.png";
+
+        function parseCSV(text) {
+            const rows = []; let row = []; let col = '';
+            let inQuotes = false; let i = 0;
+            while (i < text.length) {
+                const c = text[i];
+                if (inQuotes) {
+                    if (c === '"') {
+                        if (text[i + 1] === '"') { col += '"'; i++; } else { inQuotes = false; }
+                    } else { col += c; }
+                } else {
+                    if (c === '"') { inQuotes = true; }
+                    else if (c === ',') { row.push(col); col = ''; }
+                    else if (c === '\n') { row.push(col); rows.push(row); row = []; col = ''; }
+                    else if (c !== '\r') { col += c; }
+                }
+                i++;
+            }
+            if (col.length || row.length) { row.push(col); rows.push(row); }
+            return rows;
+        }
+
+        function rowsToObjects(rows) {
+            const maybeHeader = rows[0] || [];
+            const headerish = (maybeHeader[0] || '').toLowerCase().includes('set');
+            const start = headerish ? 1 : 0;
+            const items = [];
+            for (let r = start; r < rows.length; r++) {
+                const [setNumber, setName, legoLink, theme, price, imageUrl, offerFlag] = rows[r];
+
+                // skip empty rows
+                if (!setNumber && !setName) continue;
+
+                items.push({
+                    setNumber: (setNumber || '').trim(),
+                    setName: (setName || '').trim(),
+                    legoLink: (legoLink || '').trim(),
+                    theme: (theme || '').trim(),
+                    price,
+                    imageUrl: (imageUrl || '').trim(),
+                    underOffer: !!(offerFlag && String(offerFlag).trim())   // NEW
+                });
+            }
+            return items;
+        }
+
+
+        const formatGBP = (n) => {
+            if (!n) return '';
+            const clean = String(n).replace(/[^0-9.,-]/g, '');
+            const val = Number(clean.replace(',', '.'));
+            return isFinite(val) ? new Intl.NumberFormat(undefined, { style: 'currency', currency: 'GBP' }).format(val) : String(n);
+        };
+
+        function mailtoFor(item) {
+            const subj = encodeURIComponent(`ScarLego enquiry: ${item.setName} (${item.setNumber})`);
+            const body = encodeURIComponent(`Hi, I'm interested in this set.\nSet: ${item.setName} (${item.setNumber})\nPrice: ${item.price}\nLink: ${item.legoLink}`);
+            return `mailto:${CONTACT_EMAIL}?subject=${subj}&body=${body}`;
+        }
+
+        const app = document.getElementById('app');
+
+        function renderList(items) {
+            const themes = [...new Set(items.map(x => x.theme).filter(Boolean))].sort();
+
+            app.innerHTML = `
+      <div class="controls">
+        <div class="pill">${items.length} sets</div>
+        <input type="search" id="q" placeholder="Search…" />
+        <select id="themeFilter"><option value="">All Themes</option>${themes.map(t => `<option value="${t}">${t}</option>`).join('')}</select>
+        <select id="sort"><option value="name">Sort: Name</option><option value="priceAsc">Price ↑</option><option value="priceDesc">Price ↓</option></select>
+      </div>
+      <table>
+        <thead><tr><th>Image</th><th>Set name</th><th>Price</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>`;
+
+            const tbody = document.getElementById('rows');
+
+            function draw() {
+                const f = document.getElementById('q').value.trim().toLowerCase();
+                const themeSel = document.getElementById('themeFilter').value;
+                const sortVal = document.getElementById('sort').value;
+
+                let filtered = items.filter(x =>
+                    (!f || `${x.setNumber} ${x.setName} ${x.theme}`.toLowerCase().includes(f)) &&
+                    (!themeSel || x.theme === themeSel)
+                );
+
+                if (sortVal === 'name') filtered.sort((a, b) => a.setName.localeCompare(b.setName));
+                if (sortVal === 'priceAsc') filtered.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+                if (sortVal === 'priceDesc') filtered.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+
+                tbody.innerHTML = filtered.map(x => `
+        <tr>
+          <td><a href="#/set/${encodeURIComponent(x.setNumber)}"><img class="thumb" src="${x.imageUrl}" alt="${x.setName}" /></a></td>
+          <td class="name"><a class="linkish" href="#/set/${encodeURIComponent(x.setNumber)}">${x.setName}</a><div style="color:var(--muted);font-size:12px">${x.theme} • ${x.setNumber}</div></td>
+          <td class="price">${x.price ? formatGBP(x.price) : '—'}</td>
+        </tr>`).join('');
+            }
+
+            document.getElementById('q').addEventListener('input', draw);
+            document.getElementById('themeFilter').addEventListener('change', draw);
+            document.getElementById('sort').addEventListener('change', draw);
+            draw();
+        }
+
+        function renderDetail(item) {
+            app.innerHTML = `
+            <div class="crumbs"><a class="linkish" href="#/">← Back</a></div>
+            <div class="detail">
+            <div class="card">
+                <div class="mediawrap">
+                ${item.underOffer ? `<span class="offer-badge-detail" aria-label="Under offer">Under offer</span>` : ``}
+                <img class="hero" src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.setName)}" />
+                </div>
+            </div>
+            <div class="card meta">
+                <h1>${escapeHTML(item.setName)}${item.underOffer ? ' - Under offer</h1>' : '</h1>'}
+                <div>${escapeHTML(item.theme || '')} • ${escapeHTML(item.setNumber)}</div>
+                <div class="price">${displayPrice(item.price)}</div>
+                <div><a class="btn" href="${escapeHTML(item.legoLink)}" target="_blank" rel="noopener noreferrer">View on LEGO.com</a></div>
+                <div><a class="btn secondary" href="${escapeHTML(mailtoFor(item))}">Contact me</a></div>
+            </div>
+            </div>`;
+        }
+
+
+        let DATA = [];
+        async function boot() {
+            const mount = () => {
+                const hash = location.hash || '#/';
+                if (hash.startsWith('#/set/')) {
+                    const id = decodeURIComponent(hash.split('/').slice(2).join('/'));
+                    const item = DATA.find(x => x.setNumber === id);
+                    if (item) renderDetail(item); else app.innerHTML = `<div class="card">Set not found.</div>`;
+                } else renderList(DATA);
+            };
+
+            try {
+                const res = await fetch(SHEET_CSV_URL);
+                const csv = await res.text();
+                const rows = parseCSV(csv);
+                DATA = rowsToObjects(rows);
+                mount();
+                window.addEventListener('hashchange', mount);
+            } catch (err) {
+                console.error(err);
+                app.innerHTML = `<div class="card">Could not load data. ${err}</div>`;
+            }
+        }
+        boot();
+
+        // Initialize logo image (use provided file if present, else fallback SVG)
+        function legoLogoSVG() {
+            return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 80'>
+        <defs>
+            <linearGradient id='y' x1='0' x2='0' y1='0' y2='1'>
+                <stop offset='0%' stop-color='#ffe873'/><stop offset='100%' stop-color='#fdd835'/>
+            </linearGradient>
+            <linearGradient id='r' x1='0' x2='0' y1='0' y2='1'>
+                <stop offset='0%' stop-color='#ff6b6b'/><stop offset='100%' stop-color='#e53935'/>
+            </linearGradient>
+        </defs>
+        <rect x='0' y='8' rx='14' ry='14' width='300' height='64' fill='url(#y)' stroke='#222' stroke-width='3'/>
+        <rect x='310' y='8' rx='14' ry='14' width='100' height='64' fill='url(#r)' stroke='#222' stroke-width='3'/>
+        <g font-family='Rubik,Arial,Helvetica,sans-serif' font-weight='900'>
+            <text x='16' y='52' fill='#222' font-size='38'>ScarLego</text>
+            <text x='330' y='52' fill='#fff' font-size='30'>Shop</text>
+        </g>
+    </svg>`;
+        }
+        function initLogo() {
+            const el = document.getElementById('siteLogo');
+            const txt = document.getElementById('logoText');
+            if (!el) return;
+            const url = (LOGO_URL || '').trim();
+
+            if (!url) {
+                // No file provided → fallback SVG, keep text visible
+                el.src = 'data:image/svg+xml;utf8,' + legoLogoSVG();
+                return;
+            }
+
+            const probe = new Image();
+            probe.onload = () => {
+                el.src = url;
+                if (txt) txt.style.display = 'none'; // hide text when real logo loads
+            };
+            probe.onerror = () => {
+                el.src = 'data:image/svg+xml;utf8,' + legoLogoSVG();
+                if (txt) txt.style.display = ''; // show text for fallback
+            };
+            probe.src = url;
+        }
+        initLogo();
+        /* === Enhancements injected: filters, sorting, and GBP formatter override === */
+        (function () {
+            // Ensure escapeHTML exists before any usage (defensive)
+            // Ensure escapeHTML and placeholderSVG exist before any usage (defensive)
+            if (typeof window.escapeHTML !== 'function') {
+                window.escapeHTML = function (s) {
+                    return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', '\'': '&#39;' }[m]));
+                };
+            }
+            if (typeof window.placeholderSVG !== 'function') {
+                window.placeholderSVG = function (w = 120, h = 120) {
+                    const bg = encodeURIComponent('#0b0f18');
+                    const fg = encodeURIComponent('#2a3446');
+                    const txt = encodeURIComponent('No Image');
+                    return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'><rect width='100%' height='100%' fill='${bg}'/><rect x='10' y='10' rx='8' ry='8' width='${w - 20}' height='${h - 20}' fill='${fg}'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23aab3bf' font-family='Inter,Arial' font-size='16'>${txt}</text></svg>`;
+                };
+            }
+            if (typeof window.displayPrice !== 'function') {
+                window.escapeHTML = function (s) {
+                    return String(s).replace(/[&<>"']/g, function (m) {
+                        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[m]);
+                    });
+                }
+            }
+
+            // Currency formatter (replaces earlier £ function implicitly)
+            function formatGBP(n) {
+                if (!n) return '';
+                const clean = String(n).replace(/[^0-9.,-]/g, '');
+                const val = Number(clean.replace(',', '.'));
+                return isFinite(val)
+                    ? new Intl.NumberFormat(undefined, { style: 'currency', currency: 'GBP' }).format(val)
+                    : String(n);
+            }
+            function priceNumber(p) {
+                if (!p) return NaN;
+                const clean = String(p).replace(/[^0-9.,-]/g, '');
+                const val = Number(clean.replace(',', '.'));
+                return isFinite(val) ? val : NaN;
+            }
+            // Override displayPrice to use formatGBP
+            window.displayPrice = function (p) {
+                if (!p) return '<span style="color:var(--muted)">—</span>';
+                return /[£$]/.test(p) ? escapeHTML(p) : formatGBP(p);
+            }
+
+            // Override renderList to add filters + sorting
+            window.renderList = function (items) {
+                const themes = Array.from(new Set(items.map(x => x.theme).filter(Boolean))).sort();
+                let currentTheme = 'All';
+                let currentQuery = '';
+                let currentSort = 'relevance';
+
+                app.innerHTML = `
+        <div class="controls">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <div class="pill">${items.length} sets</div>
+            <div class="pill" id="themeBar" role="toolbar" aria-label="Filter by theme">
+              <button data-theme="All" class="tbtn active" aria-pressed="true">All</button>
+              ${themes.map(t => `<button data-theme="${escapeHTML(t)}" class="tbtn" aria-pressed="false">${escapeHTML(t)}</button>`).join('')}
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <select id="sort" aria-label="Sort">
+              <option value="relevance">Sort: Relevance</option>
+              <option value="price-asc">Price ↑</option>
+              <option value="price-desc">Price ↓</option>
+              <option value="name-asc">Name A→Z</option>
+            </select>
+            <input type="search" id="q" placeholder="Search by name, theme or number…" aria-label="Search sets" />
+          </div>
+        </div>
+        <div class="tablewrap" role="region" aria-live="polite">
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Set name</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>`;
+
+                // toolbar button styles
+                const style = document.createElement('style');
+                style.textContent = `.tbtn{all:unset;cursor:pointer;background:#121722;border:1px solid #1e2633;border-radius:999px;padding:6px 10px;font-size:12px;color:var(--muted)}.tbtn.active{background:var(--accent);border-color:#8d1f1e;color:#fff}`;
+                document.head.appendChild(style);
+
+                const tbody = document.getElementById('rows');
+                const themeBar = document.getElementById('themeBar');
+                const sortSel = document.getElementById('sort');
+                const q = document.getElementById('q');
+
+                function sortItems(arr) {
+                    const a = arr.slice();
+                    if (currentSort === 'price-asc') {
+                        a.sort((x, y) => (priceNumber(x.price) || Infinity) - (priceNumber(y.price) || Infinity));
+                    } else if (currentSort === 'price-desc') {
+                        a.sort((x, y) => (priceNumber(y.price) || -Infinity) - (priceNumber(x.price) || -Infinity));
+                    } else if (currentSort === 'name-asc') {
+                        a.sort((x, y) => String(x.setName).localeCompare(String(y.setName)));
+                    }
+                    return a;
+                }
+
+                function draw() {
+                    const f = currentQuery.trim().toLowerCase();
+                    let filtered = items;
+                    if (currentTheme !== 'All') filtered = filtered.filter(x => (x.theme || '') === currentTheme);
+                    if (f) filtered = filtered.filter(x => `${x.setNumber} ${x.setName} ${x.theme}`.toLowerCase().includes(f));
+                    const view = sortItems(filtered);
+                    tbody.innerHTML = view.map(x => `
+                    <tr class="${x.underOffer ? 'uo' : ''}">
+                        <td style="width:96px">
+                        <a href="#/set/${encodeURIComponent(x.setNumber)}" aria-label="View ${escapeHTML(x.setName)}">
+                            <span class="imgwrap">
+                            ${x.underOffer ? `<span class="offer-badge-list" aria-label="Under offer">Under offer</span>` : ``}
+                            <img class="thumb" loading="lazy"
+                                src="${escapeHTML(x.imageUrl)}"
+                                alt="${escapeHTML(x.setName)}"
+                                onerror="this.src='data:image/svg+xml;utf8,${encodeURIComponent(placeholderSVG())}';" />
+                            </span>
+                        </a>
+                        </td>
+                        <td class="name">
+                        <a class="linkish" href="#/set/${encodeURIComponent(x.setNumber)}">${escapeHTML(x.setName)}</a>
+                        <div style="color:var(--muted);font-size:12px">${escapeHTML(x.theme || '')} • ${escapeHTML(x.setNumber)}</div>
+                        </td>
+                        <td class="price">${displayPrice(x.price)}</td>
+                    </tr>`).join('');
+
+                }
+
+                themeBar.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button[data-theme]');
+                    if (!btn) return;
+                    currentTheme = btn.dataset.theme;
+                    themeBar.querySelectorAll('.tbtn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    draw();
+                });
+                sortSel.addEventListener('change', () => { currentSort = sortSel.value; draw(); });
+                q.addEventListener('input', (e) => { currentQuery = e.target.value; draw(); });
+
+                draw();
+            }
+        })();
+
+    </script>
+</body>
+
+</html>
