@@ -262,6 +262,39 @@
             /* shift back by 50% of own width */
         }
 
+        .available-badge-detail {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            z-index: 2;
+            background: rgba(76, 175, 80, 0.9);
+            color: #fff;
+            font-weight: 800;
+            font-size: 18px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, .25);
+            letter-spacing: .2px;
+        }
+
+        /* available-now badges */
+        .available-badge-list {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 2;
+            background: rgba(76, 175, 80, 0.85);
+            /* green-ish */
+            color: #fff;
+            font-weight: 800;
+            font-size: 11px;
+            text-align: center;
+            padding: 5px 9px;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 0, 0, .25);
+            letter-spacing: .2px;
+        }
+
         .offer-badge-detail {
             position: absolute;
             top: 8px;
@@ -334,7 +367,7 @@
             const start = headerish ? 1 : 0;
             const items = [];
             for (let r = start; r < rows.length; r++) {
-                const [setNumber, setName, legoLink, theme, price, imageUrl, offerFlag] = rows[r];
+                const [setNumber, setName, legoLink, theme, price, imageUrl, offerFlag, availabilityFlag] = rows[r];
 
                 // skip empty rows
                 if (!setNumber && !setName) continue;
@@ -346,7 +379,8 @@
                     theme: (theme || '').trim(),
                     price,
                     imageUrl: (imageUrl || '').trim(),
-                    underOffer: !!(offerFlag && String(offerFlag).trim())   // NEW
+                    underOffer: !!(offerFlag && String(offerFlag).trim()),
+                    availableNow: !!(availabilityFlag && String(availabilityFlag).trim())
                 });
             }
             return items;
@@ -418,10 +452,16 @@
             <div class="crumbs"><a class="linkish" href="#/">← Back</a></div>
             <div class="detail">
             <div class="card">
-                <div class="mediawrap">
-                ${item.underOffer ? `<span class="offer-badge-detail" aria-label="Under offer">Under offer</span>` : ``}
-                <img class="hero" src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.setName)}" />
-                </div>
+            <div class="mediawrap">
+            ${item.underOffer
+                    ? `<span class="offer-badge-detail" aria-label="Under offer">Under offer</span>`
+                    : (item.availableNow
+                        ? `<span class="available-badge-detail" aria-label="Available immediately">Available now</span>`
+                        : ``)
+                }
+            <img class="hero" src="${escapeHTML(item.imageUrl)}" alt="${escapeHTML(item.setName)}" />
+            </div>
+
             </div>
             <div class="card meta">
                 <h1>${escapeHTML(item.setName)}${item.underOffer ? ' - Under offer</h1>' : '</h1>'}
@@ -441,9 +481,11 @@
                 if (hash.startsWith('#/set/')) {
                     const id = decodeURIComponent(hash.split('/').slice(2).join('/'));
                     const item = DATA.find(x => x.setNumber === id);
-                    if (item) renderDetail(item); else app.innerHTML = `<div class="card">Set not found.</div>`;
-                } else renderList(DATA);
+                    if (item) renderDetail(item);
+                    else app.innerHTML = `<div class="card">Set not found.</div>`;
+                } else window.renderList(DATA);
             };
+
 
             try {
                 const res = await fetch(SHEET_CSV_URL);
@@ -553,7 +595,7 @@
                 const themes = Array.from(new Set(items.map(x => x.theme).filter(Boolean))).sort();
                 let currentTheme = 'All';
                 let currentQuery = '';
-                let currentSort = 'relevance';
+                let currentSort = 'availability';
 
                 app.innerHTML = `
         <div class="controls">
@@ -563,14 +605,16 @@
               <button data-theme="All" class="tbtn active" aria-pressed="true">All</button>
               ${themes.map(t => `<button data-theme="${escapeHTML(t)}" class="tbtn" aria-pressed="false">${escapeHTML(t)}</button>`).join('')}
             </div>
-          </div>
-          <div style="display:flex;gap:10px;align-items:center">
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
             <select id="sort" aria-label="Sort">
-              <option value="relevance">Sort: Relevance</option>
-              <option value="price-asc">Price ↑</option>
-              <option value="price-desc">Price ↓</option>
-              <option value="name-asc">Name A→Z</option>
+            <option value="availability">Sort: Availability</option>
+            <option value="relevance">Relevance</option>
+            <option value="price-asc">Price ↑</option>
+            <option value="price-desc">Price ↓</option>
+            <option value="name-asc">Name A→Z</option>
             </select>
+
             <input type="search" id="q" placeholder="Search by name, theme or number…" aria-label="Search sets" />
           </div>
         </div>
@@ -599,15 +643,26 @@
 
                 function sortItems(arr) {
                     const a = arr.slice();
-                    if (currentSort === 'price-asc') {
+
+                    if (currentSort === 'availability') {
+                        // availableNow = true first, then by name
+                        a.sort((x, y) => {
+                            const ax = x.availableNow ? 1 : 0;
+                            const ay = y.availableNow ? 1 : 0;
+                            if (ay !== ax) return ay - ax; // 1 before 0
+                            return String(x.setName).localeCompare(String(y.setName));
+                        });
+                    } else if (currentSort === 'price-asc') {
                         a.sort((x, y) => (priceNumber(x.price) || Infinity) - (priceNumber(y.price) || Infinity));
                     } else if (currentSort === 'price-desc') {
                         a.sort((x, y) => (priceNumber(y.price) || -Infinity) - (priceNumber(x.price) || -Infinity));
                     } else if (currentSort === 'name-asc') {
                         a.sort((x, y) => String(x.setName).localeCompare(String(y.setName)));
                     }
+                    // 'relevance' means "leave original order"
                     return a;
                 }
+
 
                 function draw() {
                     const f = currentQuery.trim().toLowerCase();
@@ -620,7 +675,13 @@
                         <td style="width:96px">
                         <a href="#/set/${encodeURIComponent(x.setNumber)}" aria-label="View ${escapeHTML(x.setName)}">
                             <span class="imgwrap">
-                            ${x.underOffer ? `<span class="offer-badge-list" aria-label="Under offer">Under offer</span>` : ``}
+                            ${x.underOffer
+                            ? `<span class="offer-badge-list" aria-label="Under offer">Under offer</span>`
+                            : (x.availableNow
+                                ? `<span class="available-badge-list" aria-label="Available immediately">Available Now</span>`
+                                : ``)
+                        }
+
                             <img class="thumb" loading="lazy"
                                 src="${escapeHTML(x.imageUrl)}"
                                 alt="${escapeHTML(x.setName)}"
@@ -634,6 +695,7 @@
                         </td>
                         <td class="price">${displayPrice(x.price)}</td>
                     </tr>`).join('');
+
 
                 }
 
