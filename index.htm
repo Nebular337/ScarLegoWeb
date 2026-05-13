@@ -82,6 +82,49 @@
             text-underline-offset: 3px
         }
 
+        .store-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 18px
+        }
+
+        .store-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 98px;
+            min-height: 52px;
+            padding: 8px 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, .16);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .24);
+            text-decoration: none;
+            transition: transform .18s ease, box-shadow .18s ease
+        }
+
+        .store-link:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, .28)
+        }
+
+        .store-link.ebay {
+            background: linear-gradient(180deg, #ffffff 0%, #eef2f7 100%);
+            border-color: rgba(12, 38, 86, .14)
+        }
+
+        .store-link.vinted {
+            background: linear-gradient(180deg, #17353a 0%, #10262a 100%);
+            border-color: rgba(109, 209, 199, .38)
+        }
+
+        .store-link img {
+            display: block;
+            height: 52px;
+            width: auto;
+            border-radius: 12px
+        }
+
         .logo {
             display: flex;
             align-items: center;
@@ -384,6 +427,14 @@
         <section class="notice" aria-label="Additional stock information">
             <h2>Can&rsquo;t see what you&rsquo;re looking for?</h2>
             <p>I don&rsquo;t only sell full LEGO sets &mdash; I sometimes have individual minifigures, sets without figures, bulk LEGO, spare pieces and accessories available too. If there&rsquo;s something specific you&rsquo;re after, just get in touch and I&rsquo;ll see what I&rsquo;ve got. You can also follow <a href="https://www.facebook.com/profile.php?id=61585734130258&amp;locale=en_GB" target="_blank" rel="noreferrer">ScarLego on Facebook</a> for new items, updates and availability.</p>
+            <div class="store-links" aria-label="Marketplace store links">
+                <a class="store-link ebay" href="https://www.ebay.co.uk/sch/i.html?item=406911249363&amp;rt=nc&amp;_trksid=p4429486.m3561.l161210&amp;_ssn=scahew_0" target="_blank" rel="noreferrer" aria-label="Visit the ScarLego eBay store">
+                    <img src="./ebay-logo.svg" alt="eBay" />
+                </a>
+                <a class="store-link vinted" href="https://www.vinted.co.uk/member/72656794" target="_blank" rel="noreferrer" aria-label="Visit the ScarLego Vinted store">
+                    <img src="./vinted-logo.svg" alt="Vinted" />
+                </a>
+            </div>
         </section>
 
         <main id="app" class="panel" aria-live="polite"></main>
